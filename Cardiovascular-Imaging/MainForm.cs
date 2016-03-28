@@ -35,12 +35,14 @@ namespace Cardiovascular_Imaging
             foreach (var darkestPixel in darkestPixels)
                 bitmap.SetPixel(darkestPixel.Position, Color.Red);
 
-            var firstDarkestPixel = darkestPixels.First();
+            foreach (var darkestPixel in darkestPixels)
+            {
+                var darkestPathPositions = bitmap.GetMostDarkSiblingPixels(darkestPixel.Position, 1000);
 
-            var firstDarkestPathPositions = bitmap.GetMostDarkSiblingPixels(firstDarkestPixel.Position, 1000);
+                foreach (var pathPosition in darkestPathPositions)
+                    bitmap.SetPixel(pathPosition, Color.Yellow);
 
-            foreach (var pathPosition in firstDarkestPathPositions)
-                bitmap.SetPixel(pathPosition, Color.Yellow);
+            }
 
             DisplayBitmap(bitmap);
 
