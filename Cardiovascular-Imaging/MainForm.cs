@@ -15,7 +15,9 @@ namespace Cardiovascular_Imaging
         string _imagePathPattern = @"D:\studies\PHD thesis\images\BK\BMP\IMG\IMG00000_00{0}.bmp";
         const int _minImageNumber = 1;
         const int _maxImageNumber = 70;
-        int _tickCount = 30;
+        int _tickCount = 10;
+
+        public float Threshold { get { return uxThresholdTrackBar.Value/1000f; } }
 
         public MainForm()
         {
@@ -30,19 +32,20 @@ namespace Cardiovascular_Imaging
             var currentImagePath = GetCurrentImagePath();
             var bitmap = new Bitmap(currentImagePath);
 
-            // color darkest pixels with yellow
-            var darkestPixels = bitmap.GetDarkestPixels();
-            foreach (var darkestPixel in darkestPixels)
-                bitmap.SetPixel(darkestPixel.Position, Color.Red);
+            var darkestPixels = bitmap.GetDarkestPixelsWithThresholdAndExclusionRadius(Threshold,10);
+
+            var brightnessTableCache = bitmap.GetBrightnessTable();
 
             foreach (var darkestPixel in darkestPixels)
             {
-                var darkestPathPositions = bitmap.GetMostDarkSiblingPixels(darkestPixel.Position, 1000);
+                var darkestPathPositions = bitmap.GetMostDarkSiblingPixels(darkestPixel.Position, 500, brightnessTableCache);
 
                 foreach (var pathPosition in darkestPathPositions)
                     bitmap.SetPixel(pathPosition, Color.Yellow);
-
             }
+
+            foreach (var darkestPixel in darkestPixels)
+                bitmap.SetPixel(darkestPixel.Position, Color.Red);
 
             DisplayBitmap(bitmap);
 
