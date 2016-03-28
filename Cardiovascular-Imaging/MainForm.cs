@@ -15,7 +15,7 @@ namespace Cardiovascular_Imaging
         string _imagePathPattern = @"D:\studies\PHD thesis\images\BK\BMP\IMG\IMG00000_00{0}.bmp";
         const int _minImageNumber = 1;
         const int _maxImageNumber = 70;
-        int _tickCount = 0;
+        int _tickCount = 30;
 
         public MainForm()
         {
@@ -30,9 +30,17 @@ namespace Cardiovascular_Imaging
             var currentImagePath = GetCurrentImagePath();
             var bitmap = new Bitmap(currentImagePath);
 
+            // color darkest pixels with yellow
             var darkestPixels = bitmap.GetDarkestPixels();
             foreach (var darkestPixel in darkestPixels)
-                bitmap.SetPixel(darkestPixel.Position, Color.Yellow);
+                bitmap.SetPixel(darkestPixel.Position, Color.Red);
+
+            var firstDarkestPixel = darkestPixels.First();
+
+            var firstDarkestPathPositions = bitmap.GetMostDarkSiblingPixels(firstDarkestPixel.Position, 1000);
+
+            foreach (var pathPosition in firstDarkestPathPositions)
+                bitmap.SetPixel(pathPosition, Color.Yellow);
 
             DisplayBitmap(bitmap);
 
