@@ -19,18 +19,9 @@ namespace Cardiovascular_Imaging
 
         int _imagesWidth;
         int _imagesHeight;
-        int _tickCount = 10;
+        int _tickCount = 0;
 
-        RadialGradient _stentDetectionGradient;
-        public RadialGradient StentDetectionGradient
-        {
-            get
-            {
-                _stentDetectionGradient = _stentDetectionGradient ?? new RadialGradient(_imagesWidth, _imagesHeight);
-
-                return _stentDetectionGradient;
-            }
-        }
+        StentLocationHelper _stentLocationHelper;
 
         public float Threshold { get { return uxThresholdTrackBar.Value/1000f; } }
 
@@ -38,12 +29,21 @@ namespace Cardiovascular_Imaging
         {
             InitializeComponent();
 
-            Image firstImage = Image.FromFile(String.Format(_imagePathPattern, _minImageNumber));
+            Initialize();
+
+            uxTimer.Interval = 100;
+            uxTimer.Tick += UxTimer_Tick;
+        }
+
+        private void Initialize()
+        {
+            Image firstImage = Image.FromFile(GetCurrentImagePath());
             _imagesWidth = firstImage.Width;
             _imagesHeight = firstImage.Height;
 
-            uxTimer.Tick += UxTimer_Tick;
+            var stentArea = new Rectangle(0, 0, _imagesWidth / 3, _imagesHeight / 3);
 
+            _stentLocationHelper = new StentLocationHelper(stentArea);
         }
 
         private void uxFindDarkestAndPathFill_Click(object sender, EventArgs e)
@@ -63,7 +63,7 @@ namespace Cardiovascular_Imaging
         {
             var currentImagePath = GetCurrentImagePath();
             var bitmap = new Bitmap(currentImagePath);
-
+            /*
             var darkestPixels = bitmap.GetDarkestPixelsWithThresholdAndExclusionRadius(Threshold,10);
 
             var brightnessTableCache = bitmap.GetBrightnessTable();
@@ -78,6 +78,10 @@ namespace Cardiovascular_Imaging
 
             foreach (var darkestPixel in darkestPixels)
                 bitmap.SetPixel(darkestPixel.Position, Color.Red);
+            */
+            var stentLocation = _stentLocationHelper.GetStentLocation(bitmap);
+
+            bitmap.SetPixel(stentLocation, Color.Red);
 
             DisplayBitmap(bitmap);
 
