@@ -126,6 +126,7 @@ namespace System.Drawing
         {
             var result = new float[bitmap.Width, bitmap.Height];
 
+
             for (int y = 0; y < bitmap.Height; y++)
             {
                 for (int x = 0; x < bitmap.Width; x++)
@@ -223,11 +224,11 @@ namespace System.Drawing
                 var siblings = bitmap.GetSiblingsForPixels(positions);
 
                 var darkestSibling = siblings.First();
-                var darkestBrightness = bitmap.GetPixel(darkestSibling).GetBrightness();
+                var darkestBrightness = brightnessTableCache[darkestSibling.X, darkestSibling.Y];
                 //get darkest pixel
                 foreach (var sibling in siblings)
                 {
-                    var siblingBrigtness = bitmap.GetPixel(sibling).GetBrightness();
+                    var siblingBrigtness = brightnessTableCache[sibling.X, sibling.Y];
 
                     if(siblingBrigtness<darkestBrightness)
                     {
