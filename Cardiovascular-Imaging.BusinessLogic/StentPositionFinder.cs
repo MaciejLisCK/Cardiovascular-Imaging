@@ -7,18 +7,18 @@ using System.Threading.Tasks;
 
 namespace Cardiovascular_Imaging.BusinessLogic
 {
-    public class StentLocationHelper
+    public class StentPositionFinder
     {
         private Rectangle _area;
         private RadialGradient _locationGradient;
 
-        public StentLocationHelper(Rectangle area)
+        public StentPositionFinder(Rectangle area)
         {
             _area = area;
             _locationGradient = new RadialGradient(_area.Width, _area.Height);
         }
 
-        public Point GetStentLocation(Bitmap bitmap)
+        public Point GetStentPosition(Bitmap bitmap)
         {
             var highestScore = 0d;
             var highestScorePixel = new Point(_area.Left,_area.Bottom);

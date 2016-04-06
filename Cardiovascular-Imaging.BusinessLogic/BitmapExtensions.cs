@@ -89,6 +89,9 @@ namespace System.Drawing
                         if (isSourcePixel)
                             continue;
 
+                        if (darkestPixelsToCheck.Position.X < 20)
+                            continue;
+
                         bool isInXRange = leftRadius <= darkestPixelsToCheck.Position.X && darkestPixelsToCheck.Position.X <= rightRadius;
                         bool isInYRange = topRadius <= darkestPixelsToCheck.Position.Y && darkestPixelsToCheck.Position.Y <= bottomRadius;
 
@@ -176,7 +179,6 @@ namespace System.Drawing
             if (!isRightEdge)
                 result.Add(new Point(x + 1, y));
 
-
             if (!isBottomEdge && !isLeftEdge)
                 result.Add(new Point(x - 1, y + 1));
             if (!isBottomEdge)
@@ -243,7 +245,5 @@ namespace System.Drawing
 
             return positions;
         }
-
-
     }
 }

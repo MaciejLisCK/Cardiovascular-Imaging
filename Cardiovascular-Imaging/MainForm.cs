@@ -19,9 +19,9 @@ namespace Cardiovascular_Imaging
 
         int _imagesWidth;
         int _imagesHeight;
-        int _tickCount = 0;
+        int _tickCount = 15;
 
-        StentLocationHelper _stentLocationHelper;
+        StentPositionFinder _stentPositionFinder;
 
         public float Threshold { get { return uxThresholdTrackBar.Value/1000f; } }
 
@@ -31,7 +31,7 @@ namespace Cardiovascular_Imaging
 
             Initialize();
 
-            uxTimer.Interval = 100;
+            uxTimer.Interval = 150;
             uxTimer.Tick += UxTimer_Tick;
         }
 
@@ -43,7 +43,7 @@ namespace Cardiovascular_Imaging
 
             var stentArea = new Rectangle(0, 0, _imagesWidth / 3, _imagesHeight / 3);
 
-            _stentLocationHelper = new StentLocationHelper(stentArea);
+            _stentPositionFinder = new StentPositionFinder(stentArea);
         }
 
         private void uxFindDarkestAndPathFill_Click(object sender, EventArgs e)
@@ -63,10 +63,11 @@ namespace Cardiovascular_Imaging
         {
             var currentImagePath = GetCurrentImagePath();
             var bitmap = new Bitmap(currentImagePath);
-            /*
+            
             var darkestPixels = bitmap.GetDarkestPixelsWithThresholdAndExclusionRadius(Threshold,10);
 
             var brightnessTableCache = bitmap.GetBrightnessTable();
+           
 
             foreach (var darkestPixel in darkestPixels)
             {
@@ -78,10 +79,32 @@ namespace Cardiovascular_Imaging
 
             foreach (var darkestPixel in darkestPixels)
                 bitmap.SetPixel(darkestPixel.Position, Color.Red);
-            */
-            var stentLocation = _stentLocationHelper.GetStentLocation(bitmap);
+            
 
-            bitmap.SetPixel(stentLocation, Color.Red);
+            var stentPosition = _stentPositionFinder.GetStentPosition(bitmap);
+            /*
+            var brightnessTableCache = bitmap.GetBrightnessTable();
+*/
+            var alg = new ExpandSimilarityAlgorithm();
+            var res = alg.Run(brightnessTableCache, stentPosition, new Rectangle(20, 20, bitmap.Width - 1, bitmap.Height - 1));
+            foreach (var resPos in res)
+            {
+                bitmap.SetPixel(resPos, Color.Red);
+            }
+            /*
+            foreach (var darkestPixel in darkestPixels.Where(p => p.Position.X>40))
+            {
+                var res1 = alg.Run(brightnessTableCache, darkestPixel.Position, new Rectangle(20, 20, bitmap.Width - 1, bitmap.Height - 1));
+
+                foreach (var pathPosition in res1)
+                    bitmap.SetPixel(pathPosition, Color.Yellow);
+            }
+            */
+
+            bitmap.SetPixel(stentPosition, Color.YellowGreen);
+            var graphics = Graphics.FromImage(bitmap);
+            graphics.DrawEllipse(Pens.GreenYellow, new RectangleF(stentPosition.X - 3, stentPosition.Y - 3, 6, 6));
+            graphics.Dispose();
 
             DisplayBitmap(bitmap);
 
