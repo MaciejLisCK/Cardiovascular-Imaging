@@ -21,6 +21,10 @@ namespace Cardiovascular_Imaging
         int _imagesHeight;
         int _tickCount = 15;
 
+        Point[] res;
+        Point stentPosition;
+        Bitmap bitmap;
+
         StentPositionFinder _stentPositionFinder;
 
         public float Threshold { get { return uxThresholdTrackBar.Value/1000f; } }
@@ -31,7 +35,7 @@ namespace Cardiovascular_Imaging
 
             Initialize();
 
-            uxTimer.Interval = 150;
+            uxTimer.Interval = 1;
             uxTimer.Tick += UxTimer_Tick;
         }
 
@@ -44,6 +48,37 @@ namespace Cardiovascular_Imaging
             var stentArea = new Rectangle(0, 0, _imagesWidth / 3, _imagesHeight / 3);
 
             _stentPositionFinder = new StentPositionFinder(stentArea);
+
+
+
+            var currentImagePath = GetCurrentImagePath();
+            bitmap = new Bitmap(currentImagePath);
+
+            var darkestPixels = bitmap.GetDarkestPixelsWithThresholdAndExclusionRadius(Threshold, 10);
+
+            var brightnessTableCache = bitmap.GetBrightnessTable();
+
+
+            foreach (var darkestPixel in darkestPixels)
+            {
+                var darkestPathPositions = bitmap.GetMostDarkSiblingPixels(darkestPixel.Position, 500, brightnessTableCache);
+
+                foreach (var pathPosition in darkestPathPositions)
+                    bitmap.SetPixel(pathPosition, Color.Yellow);
+            }
+
+            foreach (var darkestPixel in darkestPixels)
+                bitmap.SetPixel(darkestPixel.Position, Color.Red);
+
+
+            stentPosition = _stentPositionFinder.GetStentPosition(bitmap);
+            /*
+            var brightnessTableCache = bitmap.GetBrightnessTable();
+*/
+            var alg = new ExpandSimilarityAlgorithm();
+            res = alg.Run(brightnessTableCache, stentPosition, new Rectangle(20, 20, bitmap.Width - 1, bitmap.Height - 1));
+
+
         }
 
         private void uxFindDarkestAndPathFill_Click(object sender, EventArgs e)
@@ -61,36 +96,8 @@ namespace Cardiovascular_Imaging
 
         private void UxTimer_Tick(object sender, EventArgs e)
         {
-            var currentImagePath = GetCurrentImagePath();
-            var bitmap = new Bitmap(currentImagePath);
-            
-            var darkestPixels = bitmap.GetDarkestPixelsWithThresholdAndExclusionRadius(Threshold,10);
-
-            var brightnessTableCache = bitmap.GetBrightnessTable();
-           
-
-            foreach (var darkestPixel in darkestPixels)
-            {
-                var darkestPathPositions = bitmap.GetMostDarkSiblingPixels(darkestPixel.Position, 500, brightnessTableCache);
-
-                foreach (var pathPosition in darkestPathPositions)
-                    bitmap.SetPixel(pathPosition, Color.Yellow);
-            }
-
-            foreach (var darkestPixel in darkestPixels)
-                bitmap.SetPixel(darkestPixel.Position, Color.Red);
-            
-
-            var stentPosition = _stentPositionFinder.GetStentPosition(bitmap);
-            /*
-            var brightnessTableCache = bitmap.GetBrightnessTable();
-*/
-            var alg = new ExpandSimilarityAlgorithm();
-            var res = alg.Run(brightnessTableCache, stentPosition, new Rectangle(20, 20, bitmap.Width - 1, bitmap.Height - 1));
-            foreach (var resPos in res)
-            {
-                bitmap.SetPixel(resPos, Color.Red);
-            }
+            if(number<res.Length)
+                bitmap.SetPixel(res[number], Color.Red);
             /*
             foreach (var darkestPixel in darkestPixels.Where(p => p.Position.X>40))
             {
@@ -109,7 +116,9 @@ namespace Cardiovascular_Imaging
             DisplayBitmap(bitmap);
 
             _tickCount++;
+            number++;
         }
+        int number;
 
         private string GetCurrentImagePath()
         {
