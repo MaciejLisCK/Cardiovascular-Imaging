@@ -1,9 +1,11 @@
-﻿using Cardiovascular_Imaging.BusinessLogic;
+﻿using AForge.Imaging.Filters;
+using Cardiovascular_Imaging.BusinessLogic;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -84,13 +86,33 @@ namespace Cardiovascular_Imaging
             var stentPosition = _stentPositionFinder.GetStentPosition(bitmap);
             /*
             var brightnessTableCache = bitmap.GetBrightnessTable();
-*//*
+*/
+            /* ExpandSimilarityAlgorithm */
             var alg = new ExpandSimilarityAlgorithm();
             var res = alg.Run(brightnessTableCache, stentPosition, new Rectangle(20, 20, bitmap.Width - 1, bitmap.Height - 1));
             foreach (var resPos in res)
             {
                 bitmap.SetPixel(resPos, Color.Red);
-            }*/
+            }
+
+            Bitmap expandSimilarityAlgorithmBinaryBitmap = new Bitmap(bitmap.Width, bitmap.Height, PixelFormat.Format24bppRgb);
+            foreach (var resPos in res)
+            {
+                expandSimilarityAlgorithmBinaryBitmap.SetPixel(resPos, Color.Red);
+            }
+            uxExpandSimilarityAlgorithmPictureBox.Image = expandSimilarityAlgorithmBinaryBitmap;
+            uxExpandSimilarityAlgorithmPictureBox.Refresh();
+
+            /* CLOSING for ExpandSimilarityAlgorithm */
+            Closing filter = new Closing();
+            var closingResultBitmap = filter.Apply(expandSimilarityAlgorithmBinaryBitmap);
+
+            uxClosingResultPictureBox.Image = closingResultBitmap;
+            uxClosingResultPictureBox.Refresh();
+
+
+
+
             /*
             foreach (var darkestPixel in darkestPixels.Where(p => p.Position.X>40))
             {
@@ -118,11 +140,12 @@ namespace Cardiovascular_Imaging
             }
 
             */
+            /*
             bitmap.SetPixel(stentPosition, Color.YellowGreen);
             var graphics = Graphics.FromImage(bitmap);
             graphics.DrawEllipse(Pens.GreenYellow, new RectangleF(stentPosition.X - 3, stentPosition.Y - 3, 6, 6));
             graphics.Dispose();
-            
+            */
             DisplayBitmap(bitmap);
 
             _tickCount++;
@@ -143,6 +166,12 @@ namespace Cardiovascular_Imaging
             uxPictureBox.Refresh();
         }
 
-
+        private void button1_Click(object sender, EventArgs e)
+        {
+            var datetimeString = DateTime.Now.ToString("yyyyMMddHHmmss");
+            uxPictureBox.Image.Save(datetimeString + " 1.png");
+            uxExpandSimilarityAlgorithmPictureBox.Image.Save(datetimeString + " 2.png");
+            uxClosingResultPictureBox.Image.Save(datetimeString + " 3.png");
+        }
     }
 }
